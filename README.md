@@ -46,7 +46,7 @@ Image Cropper is a modern and intuitive graphical user interface (GUI) applicati
 - ttkbootstrap
 - Tkinter (usually included with Python)
 
-## Screenshots
+## Screenshot
 
 ![[App Screenshot](screenshot.png)](https://github.com/user-attachments/assets/6e768e31-4192-49f0-9168-b67cfd47f2f2)
 
