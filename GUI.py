@@ -1,6 +1,6 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
-from PIL import Image, ImageTk
+from tkinter import filedialog, messagebox, colorchooser
+from PIL import Image, ImageTk, ImageDraw
 import os
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
@@ -25,6 +25,8 @@ class ImageCropperApp:
         self.end_y = None
         self.rect_id = None
         self.square_mode = False
+        self.save_original = tk.BooleanVar(value=False)
+        self.rect_color = "red"  # 矩形の初期カラー
 
         # 上部コントロールフレーム
         self.control_frame = ttk.Frame(root, padding=10)
@@ -48,6 +50,14 @@ class ImageCropperApp:
 
         self.refresh_button = ttk.Button(self.control_frame, text="Refresh", command=self.refresh, bootstyle=DANGER)
         self.refresh_button.grid(row=0, column=5, padx=5, pady=5)
+
+        # ラジオボタンを追加して元画像を保存するオプション
+        self.save_original_checkbox = ttk.Checkbutton(self.control_frame, text="Save Original Image with Crop", variable=self.save_original)
+        self.save_original_checkbox.grid(row=0, column=6, padx=5, pady=5)
+
+        # 矩形の色を選択するボタン
+        self.color_button = ttk.Button(self.control_frame, text="Select Rectangle Color", command=self.choose_color, bootstyle=INFO)
+        self.color_button.grid(row=0, column=7, padx=5, pady=5)
 
         # 画像表示用のCanvas
         self.canvas_frame = ttk.Frame(root)
@@ -124,6 +134,12 @@ class ImageCropperApp:
         mode = "Square" if self.square_mode else "Rectangle"
         self.square_mode_button.config(text=f"{mode} Crop Mode")
 
+    def choose_color(self):
+        # 矩形の色を選択
+        color_code = colorchooser.askcolor(title="Choose Rectangle Color")[1]
+        if color_code:
+            self.rect_color = color_code
+
     def on_button_press(self, event):
         # マウスクリック位置を記録
         self.start_x = event.x
@@ -154,7 +170,7 @@ class ImageCropperApp:
 
         if self.rect_id:
             self.canvas.delete(self.rect_id)
-        self.rect_id = self.canvas.create_rectangle(self.start_x, self.start_y, end_x, end_y, outline='red')
+        self.rect_id = self.canvas.create_rectangle(self.start_x, self.start_y, end_x, end_y, outline=self.rect_color)
 
     def on_button_release(self, event):
         # マウスボタンを離したときにクロップ領域を決定
@@ -243,6 +259,14 @@ class ImageCropperApp:
                     save_path = os.path.join(save_dir, f"{name}_cropped{ext}")
                     cropped_image.save(save_path)
 
+                    # オリジナル画像も保存する場合
+                    if self.save_original.get():
+                        original_with_rect = self.images[i].copy()
+                        draw = ImageDraw.Draw(original_with_rect)
+                        draw.rectangle(self.adjust_crop_box(self.images[i].size, self.displayed_image.size), outline=self.rect_color, width=3)
+                        original_save_path = os.path.join(save_dir, f"{name}_original_with_rectangle{ext}")
+                        original_with_rect.save(original_save_path)
+
     def refresh(self):
         # 初期画面に戻す
         self.current_image_index = 0
@@ -257,3 +281,4 @@ if __name__ == "__main__":
     screen_height = root.winfo_screenheight()
     root.geometry(f"{int(screen_width * 0.8)}x{int(screen_height * 0.8)}")
     root.mainloop()
+
